@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>泌尿系統之旅</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4caf50;
+            --primary-hover: #45a049;
+            --secondary-color: #007bff;
+            --secondary-hover: #0056b3;
+            --danger-color: #f44336;
+            --danger-hover: #da190b;
+            --background-color: #f0f4f8;
+            --card-background: #fff;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-color: #a7d9ed;
+            --obstacle-color: #ff6b6b;
+            --collectible-color: #4ecdc4;
+            --title-gradient: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            --gold-color: #ffd700;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background: var(--card-background);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .game-info {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .game-message {
+            color: var(--danger-color);
+            font-weight: bold;
+            min-height: 1.5em;
+            user-select: none;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .win-message {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            animation: celebration 1s ease-in-out infinite alternate;
+        }
+
+        canvas {
+            background: var(--card-background);
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            max-width: 500px;
+            width: 100%;
+            height: 400px;
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            width: 100%;
+            justify-content: center;
+            margin-top: 1.5rem;
+            gap: 1rem;
+        }
+
+        .control-button {
+            padding: 1rem 2rem;
+            font-size: 1.15rem;
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            min-width: 150px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: 600;
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .control-button:active {
+            transform: translateY(0);
+        }
+
+        .control-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .start-game-style {
+            background: var(--primary-color);
+        }
+
+        .start-game-style:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+
+        .jump-style {
+            background: var(--secondary-color);
+        }
+
+        .jump-style:hover:not(:disabled) {
+            background: var(--secondary-hover);
+        }
+
+        .restart-game-style {
+            background: var(--danger-color);
+        }
+
+        .restart-game-style:hover:not(:disabled) {
+            background: var(--danger-hover);
+        }
+
+        /* 水波紋動畫效果 */
+        @keyframes ripple {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes wave {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7),
+                           0 0 0 10px rgba(78, 205, 196, 0.5),
+                           0 0 0 20px rgba(69, 183, 209, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(255, 107, 107, 0.5),
+                           0 0 0 20px rgba(78, 205, 196, 0.3),
+                           0 0 0 30px rgba(69, 183, 209, 0.1);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7),
+                           0 0 0 10px rgba(78, 205, 196, 0.5),
+                           0 0 0 20px rgba(69, 183, 209, 0.3);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                filter: brightness(1) drop-shadow(0 0 5px rgba(255, 107, 107, 0.5));
+            }
+            50% {
+                filter: brightness(1.1) drop-shadow(0 0 15px rgba(78, 205, 196, 0.8));
+            }
+        }
+
+        @keyframes celebration {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes goldFall {
+            0% {
+                transform: translateY(-10px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(400px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes characterJump {
+            0% {
+                transform: scale(1) translateY(0);
+            }
+            25% {
+                transform: scale(1.2) translateY(-20px);
+            }
+            50% {
+                transform: scale(1.3) translateY(-40px);
+            }
+            75% {
+                transform: scale(1.2) translateY(-20px);
+            }
+            100% {
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .title-container {
+            animation: wave 3s ease-in-out infinite, glow 2s ease-in-out infinite;
+            margin-bottom: 2rem;
+        }
+
+        .gold-coin {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #ffd700, #ffed4e);
+            border-radius: 50%;
+            border: 2px solid #ffb300;
+            animation: goldFall 2s ease-in forwards;
+            z-index: 1000;
+        }
+
+        .gold-coin::before {
+            content: '¥';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: #b8860b;
+        }
+
+        @media (max-width: 640px) {
+            .game-container {
+                padding: 1rem;
+            }
+            
+            canvas {
+                height: 300px;
+            }
+            
+            .control-button {
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl font-bold mb-4 text-gray-800">泌尿系統之旅</h1>
+        <p class="text-gray-600 mb-4 text-left">
+            引導角色收集水滴、蔬菜、水果，增加彈跳能力，以避開有害因素！<br />跳過障礙物（有害因素）得分，沒跳過扣分！<br />滿分10分過關🎊。
+        </p>
+        <div class="game-info">
+            <span>彈跳值: <span id="score">10</span></span>
+            <span>生命值: <span id="health">0</span></span>
+        </div>
+        <canvas id="gameCanvas" width="500" height="400"></canvas>
+        <div class="game-message" id="gameMessage"></div>
+        <div class="controls">
+            <button id="mainActionButton" class="control-button start-game-style">開始遊戲</button>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲配置常數
+        const GAME_CONFIG = {
+            CANVAS: {
+                WIDTH: 500,
+                HEIGHT: 400
+            },
+            CHARACTER: {
+                SIZE: 120,
+                START_X: 50
+            },
+            PHYSICS: {
+                GRAVITY: 0.5,
+                BASE_JUMP_VELOCITY: -15,
+                MAX_JUMP_VELOCITY: -30,
+                SCROLL_SPEED: 5
+            },
+            GAME: {
+                GROUND_HEIGHT: 40,
+                MAX_HEALTH: 10,
+                STARTING_SCORE: 10,
+                STARTING_HEALTH: 0,
+                WIN_HEALTH_THRESHOLD: 10,
+                JUMP_COST: 3,
+                OBSTACLE_PASS_SCORE: 5,
+                OBSTACLE_HIT_PENALTY: 2
+            },
+            SPAWN: {
+                OBSTACLE_INTERVAL: 100,
+                COLLECTIBLE_INTERVAL: 75
+            },
+            AUDIO: {
+                MASTER_VOLUME: -8,
+                SOUND_COOLDOWN: {
+                    JUMP: 100,
+                    COLLECT: 120,
+                    HIT: 130
+                }
+            },
+            COLORS: {
+                OBSTACLE: '#ff6b6b',
+                COLLECTIBLE: '#4ecdc4'
+            }
+        };
+
+        // 遊戲狀態枚舉
+        const GAME_STATE = {
+            PRE_START: 'PRE_START',
+            PLAYING: 'PLAYING',
+            GAME_OVER: 'GAME_OVER',
+            GAME_WON: 'GAME_WON'
+        };
+
+        // 資源URL
+        const RESOURCES = {
+            CHARACTER_IMAGE: 'https://i.postimg.cc/c4d1rjm9/1753590796905.png',
+            GOLD_COIN_IMAGE: 'https://i.postimg.cc/5tzMS89P/1755075651800.png',
+            COLLECTIBLE_IMAGES: [
+                'https://i.postimg.cc/nrSQdJVk/1753587464452.png',
+                'https://i.postimg.cc/xdkYHVBQ/1753588082975.png',
+                'https://i.postimg.cc/QCDrR9CN/1753588044565.png'
+            ]
+        };
+
+        // 障礙物配置
+        const OBSTACLE_CONFIG = [
+            { name: '細菌', healthImpact: -3, score: 3 },
+            { name: '腫瘤', healthImpact: -5, score: 5 },
+            { name: '糖尿病', healthImpact: -2, score: 2 },
+            { name: '結石', healthImpact: -1, score: 1 },
+            { name: '抽煙', healthImpact: -1, score: 1 },
+            { name: '熬夜', healthImpact: -1, score: 1 },
+            { name: '基因突變', healthImpact: -1, score: 1 },
+            { name: '止痛藥', healthImpact: -1, score: 1 }
+        ];
+
+        // 金幣粒子類
+        class GoldCoin {
+            constructor(x, y, goldImage) {
+                this.x = x;
+                this.y = y;
+                this.velocityX = (Math.random() - 0.5) * 4;
+                this.velocityY = Math.random() * -5 - 2;
+                this.gravity = 0.3;
+                this.rotation = 0;
+                this.rotationSpeed = Math.random() * 10 + 5;
+                this.life = 120; // 2秒 (60fps)
+                this.maxLife = 120;
+                this.goldImage = goldImage;
+                this.size = 20; // 金幣大小
+            }
+
+            update() {
+                this.x += this.velocityX;
+                this.y += this.velocityY;
+                this.velocityY += this.gravity;
+                this.rotation += this.rotationSpeed;
+                this.life--;
+            }
+
+            draw(ctx) {
+                const alpha = this.life / this.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                
+                // 繪製金幣圖片
+                if (this.goldImage && this.goldImage.complete && this.goldImage.naturalHeight !== 0) {
+                    ctx.drawImage(this.goldImage, -this.size/2, -this.size/2, this.size, this.size);
+                } else {
+                    // 如果圖片載入失敗，使用原本的繪製方式
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 10);
+                    gradient.addColorStop(0, '#ffd700');
+                    gradient.addColorStop(1, '#ffb300');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = '#b8860b';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // 繪製¥符號
+                    ctx.fillStyle = '#b8860b';
+                    ctx.font = 'bold 12px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('¥', 0, 0);
+                }
+                
+                ctx.restore();
+            }
+
+            isDead() {
+                return this.life <= 0;
+            }
+        }
+
+        // 遊戲類別
+        class Game {
+            constructor() {
+                this.canvas = null;
+                this.ctx = null;
+                this.character = {};
+                this.obstacles = [];
+                this.collectibles = [];
+                this.goldCoins = [];
+                this.score = GAME_CONFIG.GAME.STARTING_SCORE;
+                this.health = GAME_CONFIG.GAME.STARTING_HEALTH;
+                this.gameFrame = 0;
+                this.currentGameState = GAME_STATE.PRE_START;
+                this.audioManager = new AudioManager();
+                this.resourceManager = new ResourceManager();
+                this.inputManager = new InputManager(this);
+                this.renderer = new Renderer();
+                this.lastUpdateTime = 0;
+                this.isJumpKeyPressed = false;
+                this.lastJumpTime = 0;
+                this.jumpCooldown = 200;
+                this.hitObstacles = []; // 記錄撞到的障礙物
+                this.characterAnimationScale = 1;
+                this.characterAnimationY = 0;
+                this.isWinAnimating = false;
+                
+                this.initializeDOM();
+                this.setupEventListeners();
+            }
+
+            initializeDOM() {
+                this.scoreDisplay = document.getElementById('score');
+                this.healthDisplay = document.getElementById('health');
+                this.gameMessage = document.getElementById('gameMessage');
+                this.mainActionButton = document.getElementById('mainActionButton');
+            }
+
+            setupEventListeners() {
+                this.mainActionButton.addEventListener('click', () => this.handleButtonClick());
+                this.mainActionButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.handleButtonClick();
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if ((e.key === 'ArrowUp' || e.key === ' ') && this.currentGameState === GAME_STATE.PLAYING) {
+                        e.preventDefault();
+                        if (!this.isJumpKeyPressed) {
+                            this.handleJump();
+                            this.isJumpKeyPressed = true;
+                        }
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    if (e.key === 'ArrowUp' || e.key === ' ') {
+                        this.isJumpKeyPressed = false;
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ') {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            async initialize() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.canvas.width = GAME_CONFIG.CANVAS.WIDTH;
+                this.canvas.height = GAME_CONFIG.CANVAS.HEIGHT;
+                
+                this.renderer.initialize(this.ctx);
+                await this.resourceManager.loadResources();
+                await this.audioManager.initialize();
+                
+                this.resetGame();
+                this.startGameLoop();
+            }
+
+            resetGame() {
+                this.character = {
+                    x: GAME_CONFIG.CHARACTER.START_X,
+                    y: GAME_CONFIG.CANVAS.HEIGHT - GAME_CONFIG.CHARACTER.SIZE - GAME_CONFIG.GAME.GROUND_HEIGHT,
+                    width: GAME_CONFIG.CHARACTER.SIZE,
+                    height: GAME_CONFIG.CHARACTER.SIZE,
+                    velocityY: 0,
+                    onGround: true,
+                    jumpCount: 0
+                };
+
+                this.obstacles = [];
+                this.collectibles = [];
+                this.goldCoins = [];
+                this.score = GAME_CONFIG.GAME.STARTING_SCORE;
+                this.health = GAME_CONFIG.GAME.STARTING_HEALTH;
+                this.gameFrame = 0;
+                this.isJumpKeyPressed = false;
+                this.lastJumpTime = 0;
+                this.hitObstacles = [];
+                this.characterAnimationScale = 1;
+                this.characterAnimationY = 0;
+                this.isWinAnimating = false;
+
+                this.updateScore();
+                this.updateHealth();
+                this.gameMessage.textContent = '';
+                this.gameMessage.className = 'game-message';
+                this.currentGameState = GAME_STATE.PRE_START;
+                this.updateButtonUI();
+            }
+
+            updateScore() {
+                if (this.scoreDisplay) {
+                    this.scoreDisplay.textContent = this.score;
+                }
+            }
+
+            updateHealth() {
+                if (this.healthDisplay) {
+                    this.healthDisplay.textContent = this.health;
+                }
+            }
+
+            updateButtonUI() {
+                if (!this.mainActionButton) return;
+
+                switch (this.currentGameState) {
+                    case GAME_STATE.PRE_START:
+                        this.mainActionButton.textContent = '開始遊戲';
+                        this.mainActionButton.className = 'control-button start-game-style';
+                        this.mainActionButton.disabled = false;
+                        break;
+                    case GAME_STATE.PLAYING:
+                        this.mainActionButton.textContent = '跳躍';
+                        this.mainActionButton.className = 'control-button jump-style';
+                        this.mainActionButton.disabled = false;
+                        break;
+                    default:
+                        this.mainActionButton.textContent = '重新開始';
+                        this.mainActionButton.className = 'control-button restart-game-style';
+                        this.mainActionButton.disabled = false;
+                        break;
+                }
+            }
+
+            async handleButtonClick() {
+                try {
+                    switch (this.currentGameState) {
+                        case GAME_STATE.PRE_START:
+                            await this.startGame();
+                            break;
+                        case GAME_STATE.PLAYING:
+                            this.handleJump();
+                            break;
+                        case GAME_STATE.GAME_OVER:
+                        case GAME_STATE.GAME_WON:
+                            this.resetGame();
+                            break;
+                    }
+                } catch (error) {
+                    console.error('按鈕點擊處理錯誤:', error);
+                }
+            }
+
+            async startGame() {
+                await this.audioManager.start();
+                this.audioManager.playGameStart();
+                this.currentGameState = GAME_STATE.PLAYING;
+                this.updateButtonUI();
+            }
+
+            handleJump() {
+                if (this.currentGameState !== GAME_STATE.PLAYING) return;
+                
+                const now = Date.now();
+                if (now - this.lastJumpTime < this.jumpCooldown) return;
+
+                this.score -= GAME_CONFIG.GAME.JUMP_COST;
+                if (this.score < 0) this.score = 0;
+                this.updateScore();
+
+                let jumpVelocity = GAME_CONFIG.PHYSICS.BASE_JUMP_VELOCITY;
+                if (jumpVelocity < GAME_CONFIG.PHYSICS.MAX_JUMP_VELOCITY) {
+                    jumpVelocity = GAME_CONFIG.PHYSICS.MAX_JUMP_VELOCITY;
+                }
+
+                this.character.velocityY = jumpVelocity;
+                this.character.onGround = false;
+                this.audioManager.playJump(this.character.jumpCount > 0);
+                this.character.jumpCount++;
+                this.lastJumpTime = now;
+            }
+
+            impactHealth(amount) {
+                this.health += amount;
+                if (this.health < 0) this.health = 0;
+                this.updateHealth();
+
+                if (this.health === 0 && this.currentGameState === GAME_STATE.PLAYING) {
+                    this.endGame(false);
+                }
+            }
+
+            addScore(amount) {
+                this.score += amount;
+                this.updateScore();
+            }
+
+            createGoldCoinExplosion(x, y) {
+                for (let i = 0; i < 15; i++) {
+                    this.goldCoins.push(new GoldCoin(x, y, this.resourceManager.goldCoinImage));
+                }
+            }
+
+            startWinAnimation() {
+                this.isWinAnimating = true;
+                let animationFrame = 0;
+                const animationDuration = 120; // 2秒
+
+                const animate = () => {
+                    if (animationFrame < animationDuration) {
+                        const progress = animationFrame / animationDuration;
+                        const jumpProgress = Math.sin(progress * Math.PI * 3) * 0.5 + 0.5;
+                        
+                        this.characterAnimationScale = 1 + jumpProgress * 0.5;
+                        this.characterAnimationY = -jumpProgress * 60;
+                        
+                        animationFrame++;
+                        requestAnimationFrame(animate);
+                    } else {
+                        this.characterAnimationScale = 1;
+                        this.characterAnimationY = 0;
+                        this.isWinAnimating = false;
+                    }
+                };
+                
+                animate();
+            }
+
+            endGame(isWin) {
+                this.currentGameState = isWin ? GAME_STATE.GAME_WON : GAME_STATE.GAME_OVER;
+                
+                if (isWin) {
+                    this.gameMessage.textContent = '恭喜過關！';
+                    this.gameMessage.className = 'game-message win-message';
+                    this.audioManager.playWin();
+                    
+                    // 創建金幣爆炸效果
+                    this.createGoldCoinExplosion(
+                        this.character.x + this.character.width / 2,
+                        this.character.y + this.character.height / 2
+                    );
+                    
+                    // 開始角色動畫
+                    this.startWinAnimation();
+                } else {
+                    // 生成失敗提示
+                    let failureMessage = '遊戲結束！';
+                    if (this.hitObstacles.length > 0) {
+                        const uniqueObstacles = [...new Set(this.hitObstacles)];
+                        failureMessage = `沒跳過${uniqueObstacles.join('、')}等障礙物！`;
+                    }
+                    
+                    this.gameMessage.textContent = failureMessage;
+                    this.gameMessage.className = 'game-message';
+                    this.audioManager.playGameOver();
+                }
+                
+                this.updateButtonUI();
+            }
+
+            updateGameLogic(deltaTime) {
+                if (this.currentGameState !== GAME_STATE.PLAYING) return;
+
+                this.updateCharacterPhysics();
+                this.gameFrame++;
+                this.spawnGameObjects();
+                this.updateGameObjects();
+                this.updateGoldCoins();
+                
+                if (this.health >= GAME_CONFIG.GAME.WIN_HEALTH_THRESHOLD) {
+                    this.endGame(true);
+                }
+            }
+
+            updateCharacterPhysics() {
+                this.character.y += this.character.velocityY;
+                this.character.velocityY += GAME_CONFIG.PHYSICS.GRAVITY;
+
+                if (this.character.y < 0) {
+                    this.character.y = 0;
+                    this.character.velocityY = 0;
+                }
+
+                const groundY = GAME_CONFIG.CANVAS.HEIGHT - GAME_CONFIG.CHARACTER.SIZE - GAME_CONFIG.GAME.GROUND_HEIGHT;
+                if (this.character.y >= groundY) {
+                    this.character.y = groundY;
+                    this.character.velocityY = 0;
+                    this.character.onGround = true;
+                    this.character.jumpCount = 0;
+                } else {
+                    this.character.onGround = false;
+                }
+            }
+
+            spawnGameObjects() {
+                if (this.gameFrame % GAME_CONFIG.SPAWN.OBSTACLE_INTERVAL === 0) {
+                    this.spawnObstacle();
+                }
+
+                if (this.gameFrame % GAME_CONFIG.SPAWN.COLLECTIBLE_INTERVAL === 0) {
+                    this.spawnCollectible();
+                }
+            }
+
+            spawnObstacle() {
+                const obstacleWidth = 45;
+                const obstacleHeight = 30 + Math.random() * 80;
+                const obstacleConfig = OBSTACLE_CONFIG[Math.floor(Math.random() * OBSTACLE_CONFIG.length)];
+
+                this.obstacles.push({
+                    x: GAME_CONFIG.CANVAS.WIDTH,
+                    y: GAME_CONFIG.CANVAS.HEIGHT - GAME_CONFIG.GAME.GROUND_HEIGHT - obstacleHeight,
+                    width: obstacleWidth,
+                    height: obstacleHeight,
+                    name: obstacleConfig.name,
+                    healthImpact: obstacleConfig.healthImpact,
+                    score: obstacleConfig.score,
+                    collided: false,
+                    passed: false
+                });
+            }
+
+            spawnCollectible() {
+                const collectibleSize = 40 + Math.random() * 20;
+                const collectibleY = Math.random() * (GAME_CONFIG.CANVAS.HEIGHT - GAME_CONFIG.GAME.GROUND_HEIGHT - collectibleSize - 20) + 20;
+
+                this.collectibles.push({
+                    x: GAME_CONFIG.CANVAS.WIDTH,
+                    y: collectibleY,
+                    width: collectibleSize,
+                    height: collectibleSize,
+                    image: this.resourceManager.getRandomCollectibleImage(),
+                    points: collectibleSize < 50 ? 2 : 5
+                });
+            }
+
+            updateGameObjects() {
+                this.obstacles.forEach(obstacle => {
+                    obstacle.x -= GAME_CONFIG.PHYSICS.SCROLL_SPEED;
+                    
+                    if (!obstacle.collided && this.checkCollision(this.character, obstacle)) {
+                        this.impactHealth(obstacle.healthImpact);
+                        this.addScore(-GAME_CONFIG.GAME.OBSTACLE_HIT_PENALTY);
+                        this.audioManager.playHit();
+                        this.hitObstacles.push(obstacle.name);
+                        obstacle.collided = true;
+                    }
+                    
+                    if (!obstacle.passed && !obstacle.collided && 
+                        obstacle.x + obstacle.width < this.character.x) {
+                        this.addScore(obstacle.score);
+                        this.audioManager.playCollect();
+                        obstacle.passed = true;
+                    }
+                });
+
+                this.collectibles = this.collectibles.filter(collectible => {
+                    collectible.x -= GAME_CONFIG.PHYSICS.SCROLL_SPEED;
+                    
+                    if (this.checkCollision(this.character, collectible)) {
+                        this.addScore(collectible.points);
+                        this.impactHealth(1);
+                        this.audioManager.playCollect();
+                        return false;
+                    }
+                    
+                    return collectible.x + collectible.width > 0;
+                });
+
+                this.obstacles = this.obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+            }
+
+            updateGoldCoins() {
+                this.goldCoins.forEach(coin => coin.update());
+                this.goldCoins = this.goldCoins.filter(coin => !coin.isDead());
+            }
+
+            checkCollision(rect1, rect2) {
+                return rect1.x < rect2.x + rect2.width &&
+                       rect1.x + rect1.width > rect2.x &&
+                       rect1.y < rect2.y + rect2.height &&
+                       rect1.y + rect1.height > rect2.y;
+            }
+
+            render() {
+                this.renderer.clear();
+                this.renderer.drawGround();
+
+                if ([GAME_STATE.PLAYING, GAME_STATE.GAME_OVER, GAME_STATE.GAME_WON].includes(this.currentGameState)) {
+                    this.renderer.drawObstacles(this.obstacles);
+                    this.renderer.drawCollectibles(this.collectibles);
+                    this.renderer.drawGoldCoins(this.goldCoins);
+                }
+
+                this.renderer.drawCharacter(
+                    this.character, 
+                    this.resourceManager.characterImage,
+                    this.characterAnimationScale,
+                    this.characterAnimationY
+                );
+
+                if (this.currentGameState === GAME_STATE.PRE_START) {
+                    this.renderer.drawGameTitle();
+                }
+            }
+
+            startGameLoop() {
+                const gameLoop = (currentTime) => {
+                    const deltaTime = currentTime - this.lastUpdateTime;
+                    this.lastUpdateTime = currentTime;
+
+                    this.updateGameLogic(deltaTime);
+                    this.render();
+                    
+                    requestAnimationFrame(gameLoop);
+                };
+                
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // 音效管理器
+        class AudioManager {
+            constructor() {
+                this.audioContextStarted = false;
+                this.masterVolume = null;
+                this.synths = {};
+                this.lastPlayTimes = {
+                    jump: 0,
+                    collect: 0,
+                    hit: 0
+                };
+            }
+
+            async initialize() {
+                this.masterVolume = new Tone.Volume(GAME_CONFIG.AUDIO.MASTER_VOLUME).toDestination();
+                this.setupSynths();
+            }
+
+            setupSynths() {
+                this.synths = {
+                    jump: new Tone.PluckSynth().connect(this.masterVolume),
+                    doubleJump: new Tone.MembraneSynth({
+                        pitchDecay: 0.05,
+                        octaves: 10,
+                        oscillator: { type: 'sine' },
+                        envelope: {
+                            attack: 0.001,
+                            decay: 0.3,
+                            sustain: 0.01,
+                            release: 1.4,
+                            attackCurve: 'exponential'
+                        }
+                    }).connect(this.masterVolume),
+                    collect: new Tone.MetalSynth({
+                        frequency: 400,
+                        envelope: {
+                            attack: 0.001,
+                            decay: 0.15,
+                            sustain: 0.08,
+                            release: 0.2
+                        },
+                        harmonicity: 7.5,
+                        modulationIndex: 26,
+                        resonance: 4000,
+                        octaves: 2.5
+                    }).connect(this.masterVolume),
+                    hit: new Tone.NoiseSynth({
+                        noise: { type: 'white' },
+                        envelope: {
+                            attack: 0.001,
+                            decay: 0.2,
+                            sustain: 0,
+                            release: 0.1
+                        }
+                    }).connect(this.masterVolume),
+                    gameOver: new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'triangle' },
+                        envelope: {
+                            attack: 0.05,
+                            decay: 0.9,
+                            sustain: 0.1,
+                            release: 2.0
+                        }
+                    }).connect(this.masterVolume),
+                    gameStart: new Tone.Synth({
+                        oscillator: { type: 'sine' },
+                        envelope: {
+                            attack: 0.01,
+                            decay: 1.0,
+                            sustain: 0.8,
+                            release: 0.7
+                        }
+                    }).connect(this.masterVolume),
+                    win: new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'sine' },
+                        envelope: {
+                            attack: 0.03,
+                            decay: 0.9,
+                            sustain: 0.1,
+                            release: 1.2
+                        }
+                    }).connect(this.masterVolume)
+                };
+            }
+
+            async start() {
+                if (!this.audioContextStarted) {
+                    await Tone.start();
+                    this.audioContextStarted = true;
+                }
+            }
+
+            playJump(isDoubleJump = false) {
+                const now = Date.now();
+                if (now - this.lastPlayTimes.jump > GAME_CONFIG.AUDIO.SOUND_COOLDOWN.JUMP) {
+                    try {
+                        if (isDoubleJump) {
+                            this.synths.doubleJump.triggerAttackRelease('G4', '8n');
+                        } else {
+                            this.synths.jump.triggerAttackRelease('C4', '8n');
+                        }
+                        this.lastPlayTimes.jump = now;
+                    } catch (error) {
+                        console.warn('跳躍音效播放失敗:', error);
+                    }
+                }
+            }
+
+            playCollect() {
+                const now = Date.now();
+                if (now - this.lastPlayTimes.collect > GAME_CONFIG.AUDIO.SOUND_COOLDOWN.COLLECT) {
+                    try {
+                        this.synths.collect.triggerAttackRelease('G5', '16n');
+                        this.lastPlayTimes.collect = now;
+                    } catch (error) {
+                        console.warn('收集音效播放失敗:', error);
+                    }
+                }
+            }
+
+            playHit() {
+                const now = Date.now();
+                if (now - this.lastPlayTimes.hit > GAME_CONFIG.AUDIO.SOUND_COOLDOWN.HIT) {
+                    try {
+                        this.synths.hit.triggerAttackRelease('C2', '16n');
+                        this.lastPlayTimes.hit = now;
+                    } catch (error) {
+                        console.warn('撞擊音效播放失敗:', error);
+                    }
+                }
+            }
+
+            playGameOver() {
+                try {
+                    this.synths.gameOver.triggerAttackRelease(['C3', 'G2', 'C2'], '1.5s');
+                } catch (error) {
+                    console.warn('遊戲結束音效播放失敗:', error);
+                }
+            }
+
+            playGameStart() {
+                try {
+                    this.synths.gameStart.triggerAttackRelease('G4', '1s');
+                } catch (error) {
+                    console.warn('遊戲開始音效播放失敗:', error);
+                }
+            }
+
+            playWin() {
+                try {
+                    this.synths.win.triggerAttackRelease(['C5', 'E5', 'G5'], '1s');
+                } catch (error) {
+                    console.warn('勝利音效播放失敗:', error);
+                }
+            }
+        }
+
+        // 資源管理器
+        class ResourceManager {
+            constructor() {
+                this.characterImage = new Image();
+                this.goldCoinImage = new Image();
+                this.collectibleImages = [];
+                this.imagesLoaded = false;
+            }
+
+            async loadResources() {
+                try {
+                    await this.loadCharacterImage();
+                    await this.loadGoldCoinImage();
+                    await this.loadCollectibleImages();
+                    this.imagesLoaded = true;
+                } catch (error) {
+                    console.warn('資源載入失敗:', error);
+                    this.imagesLoaded = false;
+                }
+            }
+
+            loadCharacterImage() {
+                return new Promise((resolve, reject) => {
+                    this.characterImage.onload = resolve;
+                    this.characterImage.onerror = () => {
+                        console.warn('角色圖片載入失敗');
+                        resolve();
+                    };
+                    this.characterImage.src = RESOURCES.CHARACTER_IMAGE;
+                });
+            }
+
+            loadGoldCoinImage() {
+                return new Promise((resolve, reject) => {
+                    this.goldCoinImage.onload = resolve;
+                    this.goldCoinImage.onerror = () => {
+                        console.warn('金幣圖片載入失敗');
+                        resolve();
+                    };
+                    this.goldCoinImage.src = RESOURCES.GOLD_COIN_IMAGE;
+                });
+            }
+
+            async loadCollectibleImages() {
+                const loadPromises = RESOURCES.COLLECTIBLE_IMAGES.map((url, index) => {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.onload = resolve;
+                        img.onerror = () => {
+                            console.warn(`收集品圖片 ${index} 載入失敗`);
+                            resolve();
+                        };
+                        img.src = url;
+                        this.collectibleImages[index] = img;
+                    });
+                });
+
+                await Promise.all(loadPromises);
+            }
+
+            getRandomCollectibleImage() {
+                if (this.collectibleImages.length === 0) return null;
+                return this.collectibleImages[Math.floor(Math.random() * this.collectibleImages.length)];
+            }
+
+            isImageLoaded(image) {
+                return image && image.complete && image.naturalHeight !== 0;
+            }
+        }
+
+        // 輸入管理器
+        class InputManager {
+            constructor(game) {
+                this.game = game;
+                this.keys = {};
+            }
+
+            handleKeyDown(event) {
+                this.keys[event.key] = true;
+            }
+
+            handleKeyUp(event) {
+                this.keys[event.key] = false;
+            }
+
+            isKeyPressed(key) {
+                return !!this.keys[key];
+            }
+        }
+
+        // 渲染器
+        class Renderer {
+            constructor() {
+                this.ctx = null;
+            }
+
+            initialize(ctx) {
+                this.ctx = ctx;
+            }
+
+            clear() {
+                this.ctx.clearRect(0, 0, GAME_CONFIG.CANVAS.WIDTH, GAME_CONFIG.CANVAS.HEIGHT);
+            }
+
+            drawGround() {
+                const brickWidth = 40;
+                const brickHeight = 20;
+                
+                for (let i = 0; i < 2; i++) {
+                    const layerY = GAME_CONFIG.CANVAS.HEIGHT - (2 - i) * brickHeight;
+                    for (let x = 0; x < GAME_CONFIG.CANVAS.WIDTH; x += brickWidth) {
+                        const rowOffset = (Math.floor(layerY / brickHeight) % 2) * (brickWidth / 2);
+                        this.ctx.fillStyle = Math.floor((x + rowOffset) / brickWidth) % 2 === 0 ? '#a0522d' : '#8b4513';
+                        this.ctx.fillRect(x + rowOffset, layerY, brickWidth - 1, brickHeight - 1);
+                    }
+                }
+            }
+
+            drawCharacter(character, characterImage, scale = 1, offsetY = 0) {
+                this.ctx.save();
+                
+                const drawX = character.x + character.width / 2;
+                const drawY = character.y + character.height / 2 + offsetY;
+                
+                this.ctx.translate(drawX, drawY);
+                this.ctx.scale(scale, scale);
+                this.ctx.translate(-character.width / 2, -character.height / 2);
+                
+                if (characterImage && characterImage.complete && characterImage.naturalHeight !== 0) {
+                    this.ctx.drawImage(characterImage, 0, 0, character.width, character.height);
+                } else {
+                    this.ctx.fillStyle = '#4ecdc4';
+                    this.ctx.fillRect(0, 0, character.width, character.height);
+                }
+                
+                this.ctx.restore();
+            }
+
+            drawObstacles(obstacles) {
+                this.ctx.font = 'bold 14px Inter';
+                this.ctx.textAlign = 'center';
+                
+                obstacles.forEach(obstacle => {
+                    this.ctx.fillStyle = GAME_CONFIG.COLORS.OBSTACLE;
+                    this.ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                    
+                    this.ctx.fillStyle = '#333';
+                    this.ctx.fillText(obstacle.name, obstacle.x + obstacle.width / 2, obstacle.y - 20);
+                    
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.font = 'bold 12px Inter';
+                    this.ctx.fillText(`+${obstacle.score}`, obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height / 2);
+                    
+                    this.ctx.font = 'bold 14px Inter';
+                });
+            }
+
+            drawCollectibles(collectibles) {
+                collectibles.forEach(collectible => {
+                    if (collectible.image && collectible.image.complete && collectible.image.naturalHeight !== 0) {
+                        this.ctx.drawImage(collectible.image, collectible.x, collectible.y, collectible.width, collectible.height);
+                    } else {
+                        this.ctx.fillStyle = GAME_CONFIG.COLORS.COLLECTIBLE;
+                        this.ctx.beginPath();
+                        this.ctx.arc(
+                            collectible.x + collectible.width / 2,
+                            collectible.y + collectible.height / 2,
+                            collectible.width / 2,
+                            0,
+                            Math.PI * 2
+                        );
+                        this.ctx.fill();
+                    }
+                });
+            }
+
+            drawGoldCoins(goldCoins) {
+                goldCoins.forEach(coin => coin.draw(this.ctx));
+            }
+
+            drawGameTitle() {
+                const line1 = 'SUPER URO';
+                const line2 = '超級泌尿兄弟';
+                const line3 = 'BROTHERS';
+                const targetHeight = GAME_CONFIG.CANVAS.HEIGHT / 3;
+                const lineHeight = targetHeight / 3;
+                const fontSize1 = Math.floor(lineHeight * 0.8);
+                const fontSize2 = Math.floor(lineHeight * 1.0);
+                const fontSize3 = Math.floor(lineHeight * 0.8);
+                
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                
+                this.ctx.font = `bold ${fontSize1}px Inter`;
+                const textWidth1 = this.ctx.measureText(line1).width;
+                this.ctx.font = `bold ${fontSize2}px Inter`;
+                const textWidth2 = this.ctx.measureText(line2).width;
+                this.ctx.font = `bold ${fontSize3}px Inter`;
+                const textWidth3 = this.ctx.measureText(line3).width;
+                
+                const maxWidth = Math.max(textWidth1, textWidth2, textWidth3);
+                const padding = 40;
+                const boxWidth = maxWidth + padding * 2;
+                const boxHeight = targetHeight + padding;
+                const boxX = GAME_CONFIG.CANVAS.WIDTH / 2 - boxWidth / 2;
+                const boxY = 20;
+                
+                const gradient = this.ctx.createLinearGradient(boxX, boxY, boxX + boxWidth, boxY + boxHeight);
+                gradient.addColorStop(0, '#ff6b6b');
+                gradient.addColorStop(0.3, '#ff8e8e');
+                gradient.addColorStop(0.5, '#4ecdc4');
+                gradient.addColorStop(0.7, '#6dd5cd');
+                gradient.addColorStop(1, '#45b7d1');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+                
+                const innerGradient = this.ctx.createRadialGradient(
+                    boxX + boxWidth/2, boxY + boxHeight/2, 0,
+                    boxX + boxWidth/2, boxY + boxHeight/2, Math.max(boxWidth, boxHeight)/2
+                );
+                innerGradient.addColorStop(0, 'rgba(255,255,255,0.1)');
+                innerGradient.addColorStop(1, 'rgba(0,0,0,0.2)');
+                this.ctx.fillStyle = innerGradient;
+                this.ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+                
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 4;
+                this.ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+                
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(boxX + 2, boxY + 2, boxWidth - 4, boxHeight - 4);
+                
+                for (let i = 3; i >= 1; i--) {
+                    this.ctx.fillStyle = `rgba(0,0,0,${0.1 * i})`;
+                    this.ctx.font = `bold ${fontSize1}px Inter`;
+                    this.ctx.fillText(line1, GAME_CONFIG.CANVAS.WIDTH / 2 + i, boxY + boxHeight * 0.25 + i);
+                    this.ctx.font = `bold ${fontSize2}px Inter`;
+                    this.ctx.fillText(line2, GAME_CONFIG.CANVAS.WIDTH / 2 + i, boxY + boxHeight * 0.5 + i);
+                    this.ctx.font = `bold ${fontSize3}px Inter`;
+                    this.ctx.fillText(line3, GAME_CONFIG.CANVAS.WIDTH / 2 + i, boxY + boxHeight * 0.75 + i);
+                }
+                
+                const textGradient = this.ctx.createLinearGradient(
+                    boxX, boxY,
+                    boxX + boxWidth, boxY + boxHeight
+                );
+                textGradient.addColorStop(0, '#fff');
+                textGradient.addColorStop(0.5, '#f0f0f0');
+                textGradient.addColorStop(1, '#e0e0e0');
+                
+                this.ctx.fillStyle = textGradient;
+                this.ctx.font = `bold ${fontSize1}px Inter`;
+                this.ctx.fillText(line1, GAME_CONFIG.CANVAS.WIDTH / 2, boxY + boxHeight * 0.25);
+                this.ctx.font = `bold ${fontSize2}px Inter`;
+                this.ctx.fillText(line2, GAME_CONFIG.CANVAS.WIDTH / 2, boxY + boxHeight * 0.5);
+                this.ctx.font = `bold ${fontSize3}px Inter`;
+                this.ctx.fillText(line3, GAME_CONFIG.CANVAS.WIDTH / 2, boxY + boxHeight * 0.75);
+            }
+        }
+
+        // 初始化遊戲
+        let game;
+
+        window.addEventListener('load', async () => {
+            try {
+                game = new Game();
+                await game.initialize();
+                
+                const canvas = document.getElementById('gameCanvas');
+                canvas.classList.add('title-container');
+            } catch (error) {
+                console.error('遊戲初始化失敗:', error);
+                const gameMessage = document.getElementById('gameMessage');
+                if (gameMessage) {
+                    gameMessage.textContent = '遊戲載入失敗，請重新整理頁面';
+                    gameMessage.style.color = '#f44336';
+                }
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.code) > -1) {
+                e.preventDefault();
+            }
+        }, false);
+    </script>
+</body>
+</html>
+
